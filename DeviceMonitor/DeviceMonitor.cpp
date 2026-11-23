@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <random>
 
 class Monitor {
 private:
@@ -62,37 +63,49 @@ private:
     
 
 public:
-    PulseRate(int initialPulseRate) {
-        this->pulseRate = initialPulseRate;
-    }
+    PulseRate() {
+        generatePulseRate();
+    } 
 
+    void generatePulseRate() {
+
+        static std::random_device rd;
+        static std::mt19937 generator(rd());
+
+        std::uniform_int_distribution<int> distribution(0, 200);
+
+        pulseRate = distribution(generator);
+    }
 
     int getPulseRate() {
         return pulseRate;
-    }
-
-    void setPulseRate(int pulseRate) {
-        this->pulseRate = pulseRate;
     }
     
 };
 
 class Alarms {
 private:
-    int lowPulseAlarmLimit;
-    int highPulseAlarmLimit;
+    bool bypassAlarm= false;
+    int lowPulseAlarmLimit =30;
+    int highPulseAlarmLimit=200;
     int criticalHeartRate = 30;
-    int lowOxygenSatLimit;
-    int highOxygenSatLimit;
+    int lowOxygenSatLimit=50;
+    int highOxygenSatLimit=100;
+    int criticalOxygenSat = 79;
 public:
-     Alarms(int lowPulseAlarmLimit, int highPulseAlarmLimit, int lowOxygenSatLimit, int highOxygenSatLimit) {
+     Alarms() {
         
-
-        this->lowPulseAlarmLimit = lowPulseAlarmLimit;
-        this->highPulseAlarmLimit = highPulseAlarmLimit;
-        this->highOxygenSatLimit = highOxygenSatLimit;
-        this->lowOxygenSatLimit = lowOxygenSatLimit;
     }
+
+     bool isBypassAlarms() {
+         return bypassAlarm;
+     }
+
+     void setBypassAlarm(bool bypassAlarm) {
+         this->bypassAlarm = bypassAlarm;
+     }
+
+
      bool isCriticalHeartRate(int pulseRate) {
          if (pulseRate <= criticalHeartRate) {
              return true;
@@ -102,20 +115,47 @@ public:
          }
 
      }
+
+     bool isCriticalOxygenSat(int oxygenSat) {
+         if (oxygenSat <= criticalOxygenSat) {
+             return true;
+         }
+         else {
+             return false;
+         }
+     }
+
      int getLowPulseAlarmLimit() {
          return lowPulseAlarmLimit;
      }
 
-     void setlowPulseAlarmLimit(int lowPulseAlarmLimit) {
-         this->lowPulseAlarmLimit = lowPulseAlarmLimit;
+ 
+
+     bool setlowPulseAlarmLimit(int lowPulseAlarmLimit) {
+         if ((lowPulseAlarmLimit > highPulseAlarmLimit - 10 && !bypassAlarm || lowPulseAlarmLimit >= highPulseAlarmLimit) || lowPulseAlarmLimit < 30) {
+             return false;
+         }
+         
+         else {
+             this->lowPulseAlarmLimit = lowPulseAlarmLimit;
+             return true;
+             
+         }
+     
      }
 
      int getHighPulseAlarmLimit() {
          return highPulseAlarmLimit;
      }
 
-     void setHighPulseAlarmLimit(int highPulseAlarmLimit) {
-         this->highPulseAlarmLimit = highPulseAlarmLimit;
+     bool setHighPulseAlarmLimit(int highPulseAlarmLimit) {
+         if ((highPulseAlarmLimit < lowPulseAlarmLimit + 10 && !bypassAlarm || highPulseAlarmLimit <= lowPulseAlarmLimit) || highPulseAlarmLimit > 200) {
+             return false;
+         }
+         else {
+             this->highPulseAlarmLimit = highPulseAlarmLimit;
+             return true;
+         }
      }
 
 
@@ -123,16 +163,28 @@ public:
          return lowOxygenSatLimit;
      }
 
-     void setLowOxygenSatLimit(int lowOxygenSatLimit) {
-         this->lowOxygenSatLimit = lowOxygenSatLimit;
+     bool setLowOxygenSatLimit(int lowOxygenSatLimit) {
+         if ((lowOxygenSatLimit > highOxygenSatLimit - 15 && !bypassAlarm || lowOxygenSatLimit >= highOxygenSatLimit) || lowOxygenSatLimit < 50) {
+             return false;
+         }
+         else {
+             this->lowOxygenSatLimit = lowOxygenSatLimit;
+             return true;
+         }
      }
 
      int getHighOxygenSatLimit() {
          return highOxygenSatLimit;
      }
 
-     void setHighOxygenSatLimit(int highOxygenSatLimit) {
-         this->highOxygenSatLimit = highOxygenSatLimit;
+     bool setHighOxygenSatLimit(int highOxygenSatLimit) {
+         if ((highOxygenSatLimit < lowOxygenSatLimit + 15 && !bypassAlarm || highOxygenSatLimit <= lowOxygenSatLimit) || highOxygenSatLimit > 100){
+             return false;
+         }
+         else {
+             this->highOxygenSatLimit = highOxygenSatLimit;
+             return true;
+         }
      }
 
      bool isHighPulseRate(int pulseRate) {
@@ -179,17 +231,26 @@ public:
     private:
         int oxygenSat;
 
+
     public:
-        OxygenSat(int initialOxygenSat) {
-            this->oxygenSat = initialOxygenSat;
+
+        OxygenSat() {
+            generateOxygenSat();
         }
+
+        void generateOxygenSat() {
+
+            static std::random_device rd;
+            static std::mt19937 generator(rd());
+
+            std::uniform_int_distribution<int> distribution(0, 100);
+
+            oxygenSat = distribution(generator);
+        }
+      
 
         int getOxygenSat() {
             return oxygenSat;
-        }
-
-        void setOxygenSat(int oxygenSat) {
-            this->oxygenSat = oxygenSat;
         }
     };
 
@@ -204,14 +265,24 @@ public:
         int lowOxygenSatLimit;
         int highOxygenSatLimit;
 
-        std::cin >> lowPulseAlarmLimit;
-        std::cin >> highPulseAlarmLimit;
-        std::cin >> lowOxygenSatLimit;
-        std::cin >> highOxygenSatLimit;
 
-        PulseRate pulseRate(140);
-        OxygenSat oxygenSat = 101;
-        Alarms alarms (lowPulseAlarmLimit, highPulseAlarmLimit, lowOxygenSatLimit, highOxygenSatLimit);
+        Alarms alarms; 
+
+        std::cin >> lowPulseAlarmLimit;
+        alarms.setlowPulseAlarmLimit(lowPulseAlarmLimit);
+
+        std::cin >> highPulseAlarmLimit;
+        alarms.setHighPulseAlarmLimit(highPulseAlarmLimit);
+
+        std::cin >> lowOxygenSatLimit;
+        alarms.setLowOxygenSatLimit(lowOxygenSatLimit);
+
+        std::cin >> highOxygenSatLimit;
+        alarms.setHighOxygenSatLimit(highOxygenSatLimit);
+
+        PulseRate pulseRate;
+        OxygenSat oxygenSat;
+        
 
         Signal signal(true, true);
         Monitor monitor = true;
@@ -219,38 +290,53 @@ public:
 
         while (monitor.isPowerOn()) {
             if (signal.isVitalsDetected()) {
+                pulseRate.generatePulseRate();
+                oxygenSat.generateOxygenSat();
                 std::cout << "HR: " << pulseRate.getPulseRate() << "\n";
                 std::cout << "SpO2: " << oxygenSat.getOxygenSat() << "\n";
+    
 
-
-                if (alarms.isHighPulseRate(pulseRate.getPulseRate())) {
-                    std::cout << "ALARM HIGH HEART RATE " << pulseRate.getPulseRate() << "\n";
+                if (alarms.isCriticalHeartRate(pulseRate.getPulseRate())) {
+                    std::cout << "CRITICAL HEART RATE " << pulseRate.getPulseRate() << "\n";
                 }
 
-                else if (alarms.isLowPulseRate(pulseRate.getPulseRate())) {
+                else {
+                    if (alarms.isHighPulseRate(pulseRate.getPulseRate())) {
+                        std::cout << "ALARM HIGH HEART RATE " << pulseRate.getPulseRate() << "\n";
+                    }
+                    else if (alarms.isLowPulseRate(pulseRate.getPulseRate())) {
 
-                    std::cout << "ALARM LOW HEART RATE " << pulseRate.getPulseRate() << "\n";
+                        std::cout << "ALARM LOW HEART RATE " << pulseRate.getPulseRate() << "\n";
+                    }
+                }
+                if (alarms.isCriticalOxygenSat(oxygenSat.getOxygenSat())) {
+                    std::cout << "CRITICAL OXYGEN SATURATION " << oxygenSat.getOxygenSat() << "\n";
+
+                }
+                else {
+
+                    if (alarms.isLowOxygenSat(oxygenSat.getOxygenSat())) {
+                        std::cout << "AlARM LOW SPO2 " << oxygenSat.getOxygenSat() << "\n";
+                    }
+
+                    else if (alarms.isHighOxygenSat(oxygenSat.getOxygenSat())) {
+                        std::cout << "ALARM HIGH SPO2 " << oxygenSat.getOxygenSat() << "\n";
+                    }
                 }
 
-                if (alarms.isLowOxygenSat(oxygenSat.getOxygenSat())){
-                    std::cout << "AlARM LOW SPO2 " << oxygenSat.getOxygenSat() << "\n";
-                }
-
-                else if (alarms.isHighOxygenSat(oxygenSat.getOxygenSat())) {
-                    std::cout << "ALARM HIGH SPO2 " << oxygenSat.getOxygenSat() << "\n";
-                }
             }
 
 
-            if (!signal.isVitalsDetected()) {
+                if (!signal.isVitalsDetected()) {
 
-                std::cout << "Patient Disconnect " << "\n";
+                    std::cout << "Patient Disconnect " << "\n";
+                }
+                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-
-
         }
+
+   
 
 
     
-}
+
