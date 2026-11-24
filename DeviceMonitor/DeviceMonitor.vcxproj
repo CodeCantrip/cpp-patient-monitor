@@ -141,6 +141,14 @@
   <ItemGroup>
     <ClCompile Include="DeviceMonitor.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Alarms.h" />
+    <ClInclude Include="DataLogger.h" />
+    <ClInclude Include="Monitor.h" />
+    <ClInclude Include="OxygenSat.h" />
+    <ClInclude Include="PulseRate.h" />
+    <ClInclude Include="Signal.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
